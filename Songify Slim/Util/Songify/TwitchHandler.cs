@@ -1,4 +1,4 @@
-﻿using MahApps.Metro.Controls;
+using MahApps.Metro.Controls;
 using MahApps.Metro.Controls.Dialogs;
 using MahApps.Metro.IconPacks;
 using Songify_Slim.Models;
@@ -1982,13 +1982,29 @@ namespace Songify_Slim.Util.Songify
 
         private static async void Client_OnMessageReceived(object sender, OnMessageReceivedArgs e)
         {
-            if (!e.ChatMessage.Message.StartsWith("!") && string.IsNullOrEmpty(e.ChatMessage.CustomRewardId))
+            string trimmedMessage = e.ChatMessage.Message.Trim();
+
+            if (trimmedMessage.StartsWith("https://youtu.be/", 
+                    StringComparison.InvariantCultureIgnoreCase) ||
+                trimmedMessage.StartsWith("https://www.youtube.com/watch", 
+                    StringComparison.InvariantCultureIgnoreCase))
+            {
+                SendChatMessage(e.ChatMessage.Channel, "YouTube links aren't supported.");
                 return;
+            }
+
+            if (!trimmedMessage.StartsWith("!") && 
+                string.IsNullOrEmpty(e.ChatMessage.CustomRewardId))
+            {
+                return;
+            }
+
 
             // Attempt to find the user in the existing list.
             TwitchUser existingUser = GlobalObjects.TwitchUsers.FirstOrDefault(o => o.UserId == e.ChatMessage.UserId);
-
+            
             int subtier = int.Parse(GlobalObjects.subscribers.FirstOrDefault(sub => sub.UserId == e.ChatMessage.UserId)?.Tier ?? "0") / 1000;
+
             List<int> userLevels;
             if (existingUser == null)
             {
